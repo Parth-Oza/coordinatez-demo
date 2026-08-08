@@ -18,18 +18,39 @@ const stripe = STRIPE_KEY ? require('stripe')(STRIPE_KEY) : null;
 const products = JSON.parse(fs.readFileSync(path.join(__dirname, 'products.json'), 'utf8'));
 const ORDERS_FILE = path.join(__dirname, 'orders.json');
 
+// Atomic file writes: write to temp file, then rename — prevents corrupt JSON on crash
+function writeFileAtomic(file, data) {
+  const tmp = file + '.tmp';
+  fs.writeFileSync(tmp, data);
+  fs.renameSync(tmp, file);
+}
 function readOrders() {
   try { return JSON.parse(fs.readFileSync(ORDERS_FILE, 'utf8')); } catch { return []; }
 }
 function writeOrders(orders) {
-  fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders, null, 2));
+  writeFileAtomic(ORDERS_FILE, JSON.stringify(orders, null, 2));
+}
+
+// Simple in-memory rate limiter (per IP per bucket) — no extra dependencies
+const rateBuckets = new Map();
+function rateLimit(bucket, limit, windowMs) {
+  return (req, res, next) => {
+    const key = bucket + ':' + (req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'ip');
+    const now = Date.now();
+    let entry = rateBuckets.get(key);
+    if (!entry || now - entry.start > windowMs) { entry = { start: now, count: 0 }; rateBuckets.set(key, entry); }
+    entry.count++;
+    if (rateBuckets.size > 10000) rateBuckets.clear(); // memory backstop
+    if (entry.count > limit) return res.status(429).json({ error: 'Too many requests — try again shortly.' });
+    next();
+  };
 }
 
 // ---------- auth (users.json + session tokens; passwords hashed with scrypt) ----------
 const USERS_FILE = path.join(__dirname, 'users.json');
 const SESSIONS_FILE = path.join(__dirname, 'sessions.json');
 function readJson(f, fallback) { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch { return fallback; } }
-function writeJson(f, v) { fs.writeFileSync(f, JSON.stringify(v, null, 2)); }
+function writeJson(f, v) { writeFileAtomic(f, JSON.stringify(v, null, 2)); }
 
 function hashPassword(password) {
   const salt = crypto.randomBytes(16).toString('hex');
@@ -42,10 +63,16 @@ function verifyPassword(password, stored) {
   const check = crypto.scryptSync(password, salt, 64).toString('hex');
   return crypto.timingSafeEqual(Buffer.from(hash, 'hex'), Buffer.from(check, 'hex'));
 }
+const SESSION_TTL = 1000 * 60 * 60 * 24 * 30; // 30 days
 function createSession(email) {
   const token = crypto.randomBytes(32).toString('hex');
   const sessions = readJson(SESSIONS_FILE, {});
-  sessions[token] = { email, created: Date.now() };
+  // purge expired sessions while we're here
+  const now = Date.now();
+  for (const t of Object.keys(sessions)) {
+    if (now - sessions[t].created > SESSION_TTL) delete sessions[t];
+  }
+  sessions[token] = { email, created: now };
   writeJson(SESSIONS_FILE, sessions);
   return token;
 }
@@ -55,7 +82,7 @@ function getSessionUser(req) {
   if (!token) return null;
   const sessions = readJson(SESSIONS_FILE, {});
   const s = sessions[token];
-  if (!s || Date.now() - s.created > 1000 * 60 * 60 * 24 * 30) return null; // 30-day expiry
+  if (!s || Date.now() - s.created > SESSION_TTL) return null;
   const users = readJson(USERS_FILE, []);
   const u = users.find(x => x.email === s.email);
   return u ? { email: u.email, name: u.name, token } : null;
@@ -86,14 +113,23 @@ app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), (req,
   res.json({ received: true });
 });
 
-app.use(express.json());
+app.use(express.json({ limit: '100kb' }));
+
+// Basic security headers
+app.use((_req, res, next) => {
+  res.set('X-Content-Type-Options', 'nosniff');
+  res.set('X-Frame-Options', 'SAMEORIGIN');
+  res.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  next();
+});
+
 app.use(express.static(__dirname, { extensions: ['html'] }));
 
 // ---- API ----
 app.get('/api/health', (_req, res) => res.json({ ok: true, stripe: !!stripe }));
 
 // ---- auth routes ----
-app.post('/api/auth/register', (req, res) => {
+app.post('/api/auth/register', rateLimit('register', 10, 10 * 60 * 1000), (req, res) => {
   const { email, password, name } = req.body || {};
   if (!email || !password || String(password).length < 6) {
     return res.status(400).json({ error: 'Email and a password of 6+ characters required.' });
@@ -107,7 +143,7 @@ app.post('/api/auth/register', (req, res) => {
   res.json({ token, user: { email: norm, name: name || '' } });
 });
 
-app.post('/api/auth/login', (req, res) => {
+app.post('/api/auth/login', rateLimit('login', 15, 10 * 60 * 1000), (req, res) => {
   const { email, password } = req.body || {};
   const users = readJson(USERS_FILE, []);
   const u = users.find(x => x.email === String(email || '').toLowerCase().trim());
@@ -205,7 +241,7 @@ app.get('/api/orders', (req, res) => {
 });
 
 // Contact form -> stored as message (swap for an email service later)
-app.post('/api/contact', (req, res) => {
+app.post('/api/contact', rateLimit('contact', 20, 10 * 60 * 1000), (req, res) => {
   const { firstName, lastName, email, message } = req.body || {};
   if (!firstName || !email || !message) return res.status(400).json({ error: 'missing fields' });
   const file = path.join(__dirname, 'messages.json');
@@ -214,6 +250,15 @@ app.post('/api/contact', (req, res) => {
   msgs.push({ firstName, lastName, email, message: String(message).slice(0, 5000), created: new Date().toISOString() });
   fs.writeFileSync(file, JSON.stringify(msgs, null, 2));
   res.json({ ok: true });
+});
+
+// Unknown API routes -> JSON 404 (instead of HTML)
+app.use('/api', (_req, res) => res.status(404).json({ error: 'Not found' }));
+
+// Last-resort error handler — never leak stack traces
+app.use((err, _req, res, _next) => {
+  console.error(err);
+  res.status(500).json({ error: 'Internal server error' });
 });
 
 app.listen(PORT, () => console.log(`COORDINATEZ running on ${BASE_URL} (stripe: ${!!stripe})`));
