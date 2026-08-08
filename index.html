@@ -105,7 +105,7 @@
     font-size:clamp(44px,4.6vw,66px);
     text-align:center;
     max-width:640px;
-    margin:70px 0 0 122px;
+    margin:70px 0 0 56px;
     color:var(--white);
   }
   .hero-intro{
@@ -131,7 +131,7 @@
   .prod .ph img{width:100%;height:100%;object-fit:cover;transition:transform .6s ease;}
   .prod:hover .ph img{transform:scale(1.05);}
   .sale-badge{
-    position:absolute;top:26px;left:8px;z-index:2;
+    position:absolute;top:26px;right:0;z-index:2;
     background:var(--black);color:var(--white);
     font-size:14px;font-weight:600;text-transform:uppercase;
     padding:6px 12px;letter-spacing:.04em;
@@ -162,9 +162,16 @@
   .ws-tile img{width:100%;height:100%;object-fit:cover;transition:transform .6s ease;}
   .ws-tile:hover img{transform:scale(1.05);}
   .ws-quote{
-    background:linear-gradient(160deg,#5a7a3f 0%,#7d9a55 35%,#4c6b34 70%,#39522a 100%);
+    background:linear-gradient(160deg,#5a7a3f 0%,#7d9a55 30%,#4c6b34 55%,#39522a 80%,#6b8a48 100%);
+    background-size:220% 220%;
+    animation:quoteDrift 14s ease-in-out infinite;
     display:flex;align-items:center;justify-content:flex-start;
     padding:34px;
+  }
+  @keyframes quoteDrift{
+    0%{background-position:0% 0%;}
+    50%{background-position:100% 100%;}
+    100%{background-position:0% 0%;}
   }
   .ws-quote span{
     font-family:Georgia,'Times New Roman',serif;font-weight:400;
@@ -228,6 +235,17 @@
     0%{background-position:0% 50%;}
     50%{background-position:100% 50%;}
     100%{background-position:0% 50%;}
+  }
+  /* second flowing layer — mimics the original's drifting background video */
+  .contact::before{
+    content:"";position:absolute;inset:-20%;z-index:1;pointer-events:none;
+    background:radial-gradient(circle at 30% 70%, rgba(230,228,220,.55) 0%, rgba(230,228,220,0) 42%),
+               radial-gradient(circle at 75% 25%, rgba(255,255,255,.35) 0%, rgba(255,255,255,0) 38%);
+    animation:blobDrift 18s ease-in-out infinite alternate;
+  }
+  @keyframes blobDrift{
+    0%{transform:translate(-4%,3%) scale(1);}
+    100%{transform:translate(5%,-4%) scale(1.15);}
   }
   .contact-cols{display:grid;grid-template-columns:1fr 1fr;gap:70px;position:relative;z-index:2;}
   .contact h2{font-size:clamp(40px,4.6vw,66px);margin-bottom:44px;}
