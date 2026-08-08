@@ -339,36 +339,7 @@
 <section class="products" id="shop">
   <div class="wrap">
     <h2 class="display rv">Our Products</h2>
-    <div class="prod-grid">
-      <article class="prod rv" data-id="house-blend-40g" data-price="4300">
-        <span class="sale-badge">Sale</span>
-        <div class="ph"><img loading="lazy" src="https://images.unsplash.com/photo-1565117661210-fd54898de423?auto=format&fit=crop&w=900&q=80" alt="Ceremonial matcha powder"></div>
-        <h3>Coordinatez House Blend 40g.</h3>
-        <div class="price">$43.00 <span class="was">$52.00</span></div>
-        <div class="prod-actions">
-          <div class="qty"><button onclick="qty(this,-1)">&minus;</button><span>1</span><button onclick="qty(this,1)">+</button></div>
-          <button class="pill" onclick="addToCart(this)">Add to Cart</button>
-        </div>
-      </article>
-      <article class="prod rv" data-id="chawan-light" data-price="6000">
-        <div class="ph"><img loading="lazy" src="https://images.unsplash.com/photo-1515823064-d6e0c04616a7?auto=format&fit=crop&w=900&q=80" alt="Matcha chawan bowl"></div>
-        <h3>Matcha Chawan (Light) — Chicago Artist</h3>
-        <div class="price">$60.00</div>
-        <div class="prod-actions">
-          <div class="qty"><button onclick="qty(this,-1)">&minus;</button><span>1</span><button onclick="qty(this,1)">+</button></div>
-          <button class="pill" onclick="addToCart(this)">Add to Cart</button>
-        </div>
-      </article>
-      <article class="prod rv" data-id="whisk-150" data-price="2000">
-        <div class="ph"><img loading="lazy" src="https://images.unsplash.com/photo-1589698272390-0501a07619bb?auto=format&fit=crop&w=900&q=80" alt="Bamboo whisk"></div>
-        <h3>Whisk 150 prong.</h3>
-        <div class="price">$20.00</div>
-        <div class="prod-actions">
-          <div class="qty"><button onclick="qty(this,-1)">&minus;</button><span>1</span><button onclick="qty(this,1)">+</button></div>
-          <button class="pill" onclick="addToCart(this)">Add to Cart</button>
-        </div>
-      </article>
-    </div>
+    <div class="prod-grid" id="prodGrid" aria-live="polite"><!-- products render dynamically from the catalog --></div>
     <div class="shop-all rv"><a href="#shop" class="pill pill-lg">Shop All</a></div>
   </div>
 </section>
@@ -527,14 +498,57 @@
   burger.addEventListener('click',function(){nav.classList.toggle('open');});
   nav.querySelectorAll('a').forEach(function(a){a.addEventListener('click',function(){nav.classList.remove('open');});});
 
-  // scroll reveal
+  // scroll reveal (re-usable for dynamically rendered content)
   var io=new IntersectionObserver(function(es){
     es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} });
   },{threshold:.12});
-  document.querySelectorAll('.rv').forEach(function(el,i){
-    el.style.transitionDelay=(i%4)*70+'ms';
-    io.observe(el);
-  });
+  function initReveals(scope){
+    (scope||document).querySelectorAll('.rv:not(.in)').forEach(function(el,i){
+      el.style.transitionDelay=(i%4)*70+'ms';
+      io.observe(el);
+    });
+  }
+  initReveals();
+
+  // ---- dynamic product catalog ----
+  // Loads from the backend API when deployed, falls back to products.json on
+  // static hosting, and finally to an embedded copy so the page never breaks.
+  var FALLBACK_CATALOG=[
+    {id:'house-blend-40g',name:'Coordinatez House Blend 40g.',price:4300,compareAt:5200,image:'https://images.unsplash.com/photo-1565117661210-fd54898de423?auto=format&fit=crop&w=900&q=80',description:'Ceremonial matcha powder'},
+    {id:'chawan-light',name:'Matcha Chawan (Light) — Chicago Artist',price:6000,compareAt:null,image:'https://images.unsplash.com/photo-1515823064-d6e0c04616a7?auto=format&fit=crop&w=900&q=80',description:'Matcha chawan bowl'},
+    {id:'whisk-150',name:'Whisk 150 prong.',price:2000,compareAt:null,image:'https://images.unsplash.com/photo-1589698272390-0501a07619bb?auto=format&fit=crop&w=900&q=80',description:'Bamboo whisk'}
+  ];
+  var CATALOG={}, CATALOG_SOURCE='fallback';
+  function money(c){return '$'+(c/100).toFixed(2);}
+  function esc(s){var d=document.createElement('div');d.textContent=String(s);return d.innerHTML;}
+  function renderProducts(list){
+    var grid=document.getElementById('prodGrid');
+    grid.innerHTML=list.map(function(p){
+      return '<article class="prod rv" data-id="'+esc(p.id)+'">'+
+        (p.compareAt?'<span class="sale-badge">Sale</span>':'')+
+        '<div class="ph"><img loading="lazy" src="'+esc(p.image)+'" alt="'+esc(p.description||p.name)+'"></div>'+
+        '<h3>'+esc(p.name)+'</h3>'+
+        '<div class="price">'+money(p.price)+(p.compareAt?' <span class="was">'+money(p.compareAt)+'</span>':'')+'</div>'+
+        '<div class="prod-actions">'+
+          '<div class="qty"><button onclick="qty(this,-1)" aria-label="Decrease quantity">&minus;</button><span>1</span><button onclick="qty(this,1)" aria-label="Increase quantity">+</button></div>'+
+          '<button class="pill" onclick="addToCart(this)">Add to Cart</button>'+
+        '</div></article>';
+    }).join('');
+    list.forEach(function(p){CATALOG[p.id]=p;});
+    initReveals(grid);
+    renderCart();
+  }
+  function loadCatalog(){
+    fetch('/api/products').then(function(r){if(!r.ok)throw 0;return r.json();})
+      .then(function(list){CATALOG_SOURCE='api';renderProducts(list);})
+      .catch(function(){
+        fetch('products.json').then(function(r){if(!r.ok)throw 0;return r.json();})
+          .then(function(list){CATALOG_SOURCE='json';renderProducts(list);})
+          .catch(function(){renderProducts(FALLBACK_CATALOG);});
+      });
+  }
+  renderProducts(FALLBACK_CATALOG); // instant paint
+  loadCatalog();                     // then hydrate from live data
 
   // qty steppers
   function qty(btn,d){
@@ -542,10 +556,10 @@
     s.textContent=Math.max(1,parseInt(s.textContent)+d);
   }
 
-  // ---- cart (persists in localStorage; talks to backend when deployed) ----
+  // ---- cart (persists in localStorage; prices/names come from the live catalog) ----
   var tt;
-  var NAMES={'house-blend-40g':'Coordinatez House Blend 40g.','chawan-light':'Matcha Chawan (Light)','whisk-150':'Whisk 150 prong.'};
-  var PRICES={'house-blend-40g':4300,'chawan-light':6000,'whisk-150':2000};
+  function prodName(id){return CATALOG[id]?CATALOG[id].name:id;}
+  function prodPrice(id){return CATALOG[id]?CATALOG[id].price:0;}
   function getCart(){ try{return JSON.parse(localStorage.getItem('cz_cart'))||[];}catch(e){return [];} }
   function setCart(c){ localStorage.setItem('cz_cart',JSON.stringify(c)); renderCart(); }
   function toast(msg){
@@ -572,17 +586,17 @@
     else{
       box.innerHTML=c.map(function(x){
         return '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px;">'+
-          '<span style="font-weight:600;">'+NAMES[x.id]+'</span>'+
+          '<span style="font-weight:600;">'+esc(prodName(x.id))+'</span>'+
           '<span style="white-space:nowrap;">'+
-          '<button onclick="chQty(\''+x.id+'\',-1)" style="border:1px solid #000;background:none;border-radius:50%;width:24px;height:24px;cursor:pointer;">&minus;</button> '+
+          '<button onclick="chQty(\''+esc(x.id)+'\',-1)" style="border:1px solid #000;background:none;border-radius:50%;width:24px;height:24px;cursor:pointer;">&minus;</button> '+
           x.qty+
-          ' <button onclick="chQty(\''+x.id+'\',1)" style="border:1px solid #000;background:none;border-radius:50%;width:24px;height:24px;cursor:pointer;">+</button>'+
+          ' <button onclick="chQty(\''+esc(x.id)+'\',1)" style="border:1px solid #000;background:none;border-radius:50%;width:24px;height:24px;cursor:pointer;">+</button>'+
           '</span>'+
-          '<span style="font-weight:700;">$'+((PRICES[x.id]*x.qty)/100).toFixed(2)+'</span></div>';
+          '<span style="font-weight:700;">'+money(prodPrice(x.id)*x.qty)+'</span></div>';
       }).join('');
     }
-    var total=c.reduce(function(s,x){return s+PRICES[x.id]*x.qty;},0);
-    document.getElementById('cartTotal').textContent='$'+(total/100).toFixed(2);
+    var total=c.reduce(function(s,x){return s+prodPrice(x.id)*x.qty;},0);
+    document.getElementById('cartTotal').textContent=money(total);
   }
   function chQty(id,d){
     var c=getCart();
