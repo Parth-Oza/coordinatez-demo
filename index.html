@@ -290,7 +290,7 @@
         <li><a href="#shop">Shop</a></li>
         <li><a href="#contact">Contact</a></li>
         <li><a href="#" onclick="return false;">Login</a></li>
-        <li><a href="#" onclick="return false;">Cart (<span id="cartCount">0</span>)</a></li>
+        <li><a href="#" onclick="toggleCart();return false;">Cart (<span id="cartCount">0</span>)</a></li>
       </ul>
     </nav>
   </div>
@@ -316,7 +316,7 @@
   <div class="wrap">
     <h2 class="display rv">Our Products</h2>
     <div class="prod-grid">
-      <article class="prod rv">
+      <article class="prod rv" data-id="house-blend-40g" data-price="4300">
         <span class="sale-badge">Sale</span>
         <div class="ph"><img src="https://images.unsplash.com/photo-1565117661210-fd54898de423?auto=format&fit=crop&w=900&q=80" alt="Ceremonial matcha powder"></div>
         <h3>Coordinatez House Blend 40g.</h3>
@@ -326,7 +326,7 @@
           <button class="pill" onclick="addToCart(this)">Add to Cart</button>
         </div>
       </article>
-      <article class="prod rv">
+      <article class="prod rv" data-id="chawan-light" data-price="6000">
         <div class="ph"><img src="https://images.unsplash.com/photo-1515823064-d6e0c04616a7?auto=format&fit=crop&w=900&q=80" alt="Matcha chawan bowl"></div>
         <h3>Matcha Chawan (Light) — Chicago Artist</h3>
         <div class="price">$60.00</div>
@@ -335,7 +335,7 @@
           <button class="pill" onclick="addToCart(this)">Add to Cart</button>
         </div>
       </article>
-      <article class="prod rv">
+      <article class="prod rv" data-id="whisk-150" data-price="2000">
         <div class="ph"><img src="https://images.unsplash.com/photo-1589698272390-0501a07619bb?auto=format&fit=crop&w=900&q=80" alt="Bamboo whisk"></div>
         <h3>Whisk 150 prong.</h3>
         <div class="price">$20.00</div>
@@ -456,6 +456,22 @@
 
 <div class="toast" id="toast">Added to cart</div>
 
+<!-- cart drawer -->
+<div id="cartDrawer" style="position:fixed;top:0;right:-380px;width:360px;max-width:92vw;height:100vh;background:#fff;z-index:100;box-shadow:-12px 0 40px rgba(0,0,0,.18);transition:right .35s ease;display:flex;flex-direction:column;">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:22px 24px;border-bottom:1px solid #e1dfd9;">
+    <span class="display" style="font-size:20px;">Your Cart</span>
+    <button onclick="toggleCart()" style="background:none;border:0;font-size:26px;cursor:pointer;line-height:1;">&times;</button>
+  </div>
+  <div id="cartItems" style="flex:1;overflow-y:auto;padding:18px 24px;font-size:15px;"></div>
+  <div style="padding:20px 24px;border-top:1px solid #e1dfd9;">
+    <div style="display:flex;justify-content:space-between;font-weight:700;margin-bottom:14px;">
+      <span>Total</span><span id="cartTotal">$0.00</span>
+    </div>
+    <button class="pill" style="width:100%;" onclick="checkout()">Checkout</button>
+    <p style="font-size:12px;font-weight:500;margin-top:10px;color:#8f8d87;">Payments run through the backend when deployed (Stripe test mode). On the static demo this records a demo order.</p>
+  </div>
+</div>
+
 <script>
   // mobile menu
   var burger=document.getElementById('burger'),nav=document.getElementById('nav');
@@ -477,25 +493,84 @@
     s.textContent=Math.max(1,parseInt(s.textContent)+d);
   }
 
-  // demo cart
-  var count=0,tt;
-  function addToCart(btn){
-    var q=parseInt(btn.parentElement.querySelector('.qty span').textContent);
-    count+=q;
-    document.getElementById('cartCount').textContent=count;
+  // ---- cart (persists in localStorage; talks to backend when deployed) ----
+  var tt;
+  var NAMES={'house-blend-40g':'Coordinatez House Blend 40g.','chawan-light':'Matcha Chawan (Light)','whisk-150':'Whisk 150 prong.'};
+  var PRICES={'house-blend-40g':4300,'chawan-light':6000,'whisk-150':2000};
+  function getCart(){ try{return JSON.parse(localStorage.getItem('cz_cart'))||[];}catch(e){return [];} }
+  function setCart(c){ localStorage.setItem('cz_cart',JSON.stringify(c)); renderCart(); }
+  function toast(msg){
     var t=document.getElementById('toast');
-    t.classList.add('show');clearTimeout(tt);
-    tt=setTimeout(function(){t.classList.remove('show');},1800);
+    t.textContent=msg;t.classList.add('show');clearTimeout(tt);
+    tt=setTimeout(function(){t.classList.remove('show');},2200);
   }
+  function addToCart(btn){
+    var prod=btn.closest('.prod');
+    var q=parseInt(prod.querySelector('.qty span').textContent);
+    var id=prod.dataset.id;
+    var c=getCart();
+    var line=c.find(function(x){return x.id===id;});
+    if(line){line.qty+=q;}else{c.push({id:id,qty:q});}
+    setCart(c);
+    toast('Added to cart');
+  }
+  function renderCart(){
+    var c=getCart();
+    var n=c.reduce(function(s,x){return s+x.qty;},0);
+    document.getElementById('cartCount').textContent=n;
+    var box=document.getElementById('cartItems');
+    if(!c.length){ box.innerHTML='<p style="color:#8f8d87;font-weight:500;">Your cart is empty.</p>'; }
+    else{
+      box.innerHTML=c.map(function(x){
+        return '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px;">'+
+          '<span style="font-weight:600;">'+NAMES[x.id]+'</span>'+
+          '<span style="white-space:nowrap;">'+
+          '<button onclick="chQty(\''+x.id+'\',-1)" style="border:1px solid #000;background:none;border-radius:50%;width:24px;height:24px;cursor:pointer;">&minus;</button> '+
+          x.qty+
+          ' <button onclick="chQty(\''+x.id+'\',1)" style="border:1px solid #000;background:none;border-radius:50%;width:24px;height:24px;cursor:pointer;">+</button>'+
+          '</span>'+
+          '<span style="font-weight:700;">$'+((PRICES[x.id]*x.qty)/100).toFixed(2)+'</span></div>';
+      }).join('');
+    }
+    var total=c.reduce(function(s,x){return s+PRICES[x.id]*x.qty;},0);
+    document.getElementById('cartTotal').textContent='$'+(total/100).toFixed(2);
+  }
+  function chQty(id,d){
+    var c=getCart();
+    var line=c.find(function(x){return x.id===id;});
+    if(!line)return;
+    line.qty+=d;
+    if(line.qty<1){c=c.filter(function(x){return x.id!==id;});}
+    setCart(c);
+  }
+  function toggleCart(){
+    var d=document.getElementById('cartDrawer');
+    d.style.right=(d.style.right==='0px')?'-380px':'0px';
+  }
+  function checkout(){
+    var c=getCart();
+    if(!c.length){toast('Cart is empty');return;}
+    fetch('/api/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({items:c})})
+      .then(function(r){if(!r.ok)throw 0;return r.json();})
+      .then(function(d){
+        if(d.url){location.href=d.url;}
+        else if(d.demo){setCart([]);toggleCart();toast('Demo order placed — backend live, payments not configured');}
+        else{throw 0;}
+      })
+      .catch(function(){toast('Demo mode — deploy the backend for real checkout');});
+  }
+  renderCart();
 
-  // demo form
+  // ---- contact form (posts to backend when deployed) ----
   function demoSend(e){
     e.preventDefault();
-    var t=document.getElementById('toast');
-    t.textContent='Message sent (demo)';
-    t.classList.add('show');clearTimeout(tt);
-    tt=setTimeout(function(){t.classList.remove('show');t.textContent='Added to cart';},2000);
-    e.target.reset();
+    var f=e.target, ins=f.querySelectorAll('input,textarea');
+    var payload={firstName:ins[0].value,lastName:ins[1].value,email:ins[2].value,message:ins[3].value};
+    fetch('/api/contact',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+      .then(function(r){if(!r.ok)throw 0;return r.json();})
+      .then(function(){toast('Message sent');})
+      .catch(function(){toast('Message sent (demo mode)');});
+    f.reset();
     return false;
   }
 </script>

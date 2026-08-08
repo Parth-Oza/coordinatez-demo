@@ -1,0 +1,29 @@
+[
+  {
+    "id": "house-blend-40g",
+    "name": "Coordinatez House Blend 40g.",
+    "price": 4300,
+    "compareAt": 5200,
+    "currency": "usd",
+    "image": "https://images.unsplash.com/photo-1565117661210-fd54898de423?auto=format&fit=crop&w=900&q=80",
+    "description": "Signature ceremonial blend, stone-milled from shaded Kyoto-grown leaf."
+  },
+  {
+    "id": "chawan-light",
+    "name": "Matcha Chawan (Light) — Chicago Artist",
+    "price": 6000,
+    "compareAt": null,
+    "currency": "usd",
+    "image": "https://images.unsplash.com/photo-1515823064-d6e0c04616a7?auto=format&fit=crop&w=900&q=80",
+    "description": "Hand-thrown tea bowl by a Chicago ceramicist."
+  },
+  {
+    "id": "whisk-150",
+    "name": "Whisk 150 prong.",
+    "price": 2000,
+    "compareAt": null,
+    "currency": "usd",
+    "image": "https://images.unsplash.com/photo-1589698272390-0501a07619bb?auto=format&fit=crop&w=900&q=80",
+    "description": "Hand-carved chasen with fine, springy tines."
+  }
+]
