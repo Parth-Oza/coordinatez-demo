@@ -40,6 +40,8 @@ Railway, Fly.io, or any Node host works the same way.
 | GET | `/api/products` | Product catalog (`products.json`) |
 | POST | `/api/auth/register` | `{email,password,name}` → session token (passwords scrypt-hashed) |
 | POST | `/api/auth/login` | `{email,password}` → session token (30-day expiry) |
+| POST | `/api/auth/google` | `{credential}` (Google ID token) → session token; verifies token server-side |
+| GET | `/api/config` | Public frontend config (Google client ID) |
 | GET | `/api/auth/me` | Current user (`Authorization: Bearer <token>`) |
 | POST | `/api/auth/logout` | Invalidate session |
 | POST | `/api/checkout` | `{items:[{id,qty}]}` → Stripe Checkout URL (or demo order); ties to user if logged in |
@@ -49,6 +51,11 @@ Railway, Fly.io, or any Node host works the same way.
 | GET | `/api/orders` | All orders (`Authorization: Bearer <ADMIN_TOKEN>`) |
 
 ## Auth
+
+Two ways in — both issue the same 30-day session token:
+
+1. **Email + password** — passwords scrypt-hashed, never stored in plain text.
+2. **Sign in with Google** — set `GOOGLE_CLIENT_ID` (see `env.example`); a "Continue with Google" button then appears in the login modal automatically. The backend verifies every Google ID token against Google's servers (audience, issuer, expiry, verified email) before creating a session. Google-only accounts have no password and can't be logged into with one.
 
 Users are stored in `users.json` (scrypt-hashed passwords, never plain text), sessions in `sessions.json` — both gitignored. The Login link in the nav opens a register/login modal; the session persists in the browser for 30 days. Swap the JSON files for a database when you outgrow them.
 

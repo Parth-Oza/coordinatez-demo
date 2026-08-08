@@ -13,6 +13,7 @@ const STRIPE_KEY = process.env.STRIPE_SECRET_KEY || '';
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || '';
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || '';
 const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
 
 const stripe = STRIPE_KEY ? require('stripe')(STRIPE_KEY) : null;
 const products = JSON.parse(fs.readFileSync(path.join(__dirname, 'products.json'), 'utf8'));
@@ -126,7 +127,43 @@ app.use((_req, res, next) => {
 app.use(express.static(__dirname, { extensions: ['html'] }));
 
 // ---- API ----
-app.get('/api/health', (_req, res) => res.json({ ok: true, stripe: !!stripe }));
+app.get('/api/health', (_req, res) => res.json({ ok: true, stripe: !!stripe, google: !!GOOGLE_CLIENT_ID }));
+
+// Public config the frontend needs (never secrets — the client ID is public by design)
+app.get('/api/config', (_req, res) => res.json({ googleClientId: GOOGLE_CLIENT_ID || null }));
+
+// ---- Google Sign-In: verify the ID token server-side, then issue our own session ----
+app.post('/api/auth/google', rateLimit('google', 20, 10 * 60 * 1000), async (req, res) => {
+  const { credential } = req.body || {};
+  if (!GOOGLE_CLIENT_ID) return res.status(501).json({ error: 'Google Sign-In is not configured on this server.' });
+  if (!credential || typeof credential !== 'string' || credential.length > 4096) {
+    return res.status(400).json({ error: 'Missing Google credential.' });
+  }
+  let info;
+  try {
+    const r = await fetch('https://oauth2.googleapis.com/tokeninfo?id_token=' + encodeURIComponent(credential));
+    if (!r.ok) throw new Error('token rejected');
+    info = await r.json();
+  } catch {
+    return res.status(401).json({ error: 'Google token could not be verified.' });
+  }
+  // Validate the token is for THIS app, from Google, unexpired, with a verified email
+  if (info.aud !== GOOGLE_CLIENT_ID) return res.status(401).json({ error: 'Token audience mismatch.' });
+  if (!['accounts.google.com', 'https://accounts.google.com'].includes(info.iss)) return res.status(401).json({ error: 'Invalid token issuer.' });
+  if (Number(info.exp) * 1000 < Date.now()) return res.status(401).json({ error: 'Token expired.' });
+  if (info.email_verified !== 'true' && info.email_verified !== true) return res.status(401).json({ error: 'Google email not verified.' });
+
+  const email = String(info.email).toLowerCase().trim();
+  const users = readJson(USERS_FILE, []);
+  let u = users.find(x => x.email === email);
+  if (!u) {
+    u = { email, name: String(info.name || '').slice(0, 80), google: true, created: new Date().toISOString() };
+    users.push(u);
+    writeJson(USERS_FILE, users);
+  }
+  const token = createSession(email);
+  res.json({ token, user: { email, name: u.name } });
+});
 
 // ---- auth routes ----
 app.post('/api/auth/register', rateLimit('register', 10, 10 * 60 * 1000), (req, res) => {
@@ -147,7 +184,11 @@ app.post('/api/auth/login', rateLimit('login', 15, 10 * 60 * 1000), (req, res) =
   const { email, password } = req.body || {};
   const users = readJson(USERS_FILE, []);
   const u = users.find(x => x.email === String(email || '').toLowerCase().trim());
-  if (!u || !verifyPassword(String(password || ''), u.password)) {
+  if (!u || !u.password) {
+    // covers unknown emails and Google-only accounts (no password set)
+    return res.status(401).json({ error: 'Invalid email or password.' });
+  }
+  if (!verifyPassword(String(password || ''), u.password)) {
     return res.status(401).json({ error: 'Invalid email or password.' });
   }
   const token = createSession(u.email);

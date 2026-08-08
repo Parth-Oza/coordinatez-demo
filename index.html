@@ -470,6 +470,14 @@
     </div>
     <p id="authErr" style="color:#9a3b2e;font-size:14px;font-weight:600;margin:0 0 14px;display:none;"></p>
     <button class="pill" style="width:100%;" id="authSubmit" onclick="authSubmit()">Login</button>
+    <div id="googleWrap" style="display:none;">
+      <div style="display:flex;align-items:center;gap:12px;margin:18px 0;">
+        <span style="flex:1;height:1px;background:#00000033;"></span>
+        <span style="font-size:13px;font-weight:600;color:#555;">OR</span>
+        <span style="flex:1;height:1px;background:#00000033;"></span>
+      </div>
+      <div id="googleBtn" style="display:flex;justify-content:center;"></div>
+    </div>
     <p style="font-size:14px;font-weight:600;margin-top:16px;text-align:center;">
       <a href="#" id="authSwap" onclick="swapAuthMode();return false;" style="text-decoration:underline;">Need an account? Register</a>
     </p>
@@ -670,6 +678,41 @@
       .catch(function(){err.textContent='Login needs the backend deployed — static demo has no server.';err.style.display='block';});
   }
   renderAuth();
+
+  // ---- Google Sign-In (renders only when the backend has GOOGLE_CLIENT_ID configured) ----
+  function onGoogleCredential(resp){
+    fetch('/api/auth/google',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({credential:resp.credential})})
+      .then(function(r){return r.json().then(function(d){return {ok:r.ok,d:d};});})
+      .then(function(x){
+        var err=document.getElementById('authErr');
+        if(!x.ok){err.textContent=x.d.error||'Google sign-in failed.';err.style.display='block';return;}
+        setAuth(x.d.token,x.d.user);closeAuth();toast('Welcome, '+(x.d.user.name||x.d.user.email));
+      })
+      .catch(function(){
+        var err=document.getElementById('authErr');
+        err.textContent='Google sign-in needs the backend deployed.';err.style.display='block';
+      });
+  }
+  function initGoogle(){
+    fetch('/api/config').then(function(r){if(!r.ok)throw 0;return r.json();})
+      .then(function(cfg){
+        if(!cfg.googleClientId) return; // not configured — keep email/password only
+        var s=document.createElement('script');
+        s.src='https://accounts.google.com/gsi/client';
+        s.async=true; s.defer=true;
+        s.onload=function(){
+          try{
+            google.accounts.id.initialize({client_id:cfg.googleClientId,callback:onGoogleCredential});
+            google.accounts.id.renderButton(document.getElementById('googleBtn'),
+              {theme:'outline',size:'large',text:'continue_with',shape:'pill',width:320});
+            document.getElementById('googleWrap').style.display='block';
+          }catch(e){/* leave email/password login as-is */}
+        };
+        document.head.appendChild(s);
+      })
+      .catch(function(){/* static hosting: no backend, no Google button */});
+  }
+  initGoogle();
 
   // ---- UX niceties ----
   // Escape closes modal + drawer; clicking the dark backdrop closes the modal
