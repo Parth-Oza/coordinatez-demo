@@ -136,10 +136,13 @@
     font-size:14px;font-weight:600;text-transform:uppercase;
     padding:6px 12px;letter-spacing:.04em;
   }
-  .prod h3{font-size:clamp(19px,1.6vw,23px);font-weight:700;text-align:center;margin:34px 0 6px;}
+  .prod h3{
+    font-size:clamp(19px,1.6vw,23px);font-weight:700;text-align:center;margin:34px 0 6px;
+    min-height:3em;display:flex;align-items:center;justify-content:center;
+  }
   .prod .price{font-size:19px;font-weight:700;margin-bottom:22px;}
   .prod .price .was{color:var(--gray);text-decoration:line-through;margin-left:10px;font-weight:600;}
-  .prod-actions{display:flex;gap:10px;width:100%;max-width:430px;}
+  .prod-actions{display:flex;gap:10px;width:100%;max-width:430px;margin-top:auto;}
   .qty{
     display:flex;align-items:center;justify-content:space-between;
     border:1px solid var(--black);border-radius:300px;
