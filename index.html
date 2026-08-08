@@ -84,7 +84,17 @@
     min-height:104vh;
     position:relative;
     display:flex;flex-direction:column;
+    overflow:hidden;
   }
+  .hero-video{
+    position:absolute;inset:0;width:100%;height:100%;
+    object-fit:cover;z-index:0;
+  }
+  .hero::after{
+    content:"";position:absolute;inset:0;z-index:1;
+    background:rgba(0,0,0,.55);
+  }
+  .hero h1,.hero-intro{position:relative;z-index:2;}
   .hero h1{
     font-size:clamp(44px,4.6vw,66px);
     text-align:center;
@@ -288,6 +298,11 @@
 
 <!-- ============ HERO ============ -->
 <section class="hero" id="top">
+  <video class="hero-video" autoplay muted loop playsinline preload="auto"
+         poster="https://images.unsplash.com/photo-1746932451426-209444cd613a?auto=format&fit=crop&w=1600&q=60">
+    <source src="https://videos.pexels.com/video-files/5478267/5478267-hd_1920_1080_24fps.mp4" type="video/mp4">
+    <source src="https://videos.pexels.com/video-files/5478267/5478267-sd_640_360_24fps.mp4" type="video/mp4">
+  </video>
   <h1 class="display rv">Every shade, perfectly coordinated</h1>
   <div class="hero-intro rv">
     <p class="lead">Coordinatez started with one simple idea — matcha deserves to be experienced properly.</p>
