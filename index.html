@@ -289,7 +289,7 @@
       <ul>
         <li><a href="#shop">Shop</a></li>
         <li><a href="#contact">Contact</a></li>
-        <li><a href="#" onclick="return false;">Login</a></li>
+        <li><a href="#" id="authLink" onclick="authClick();return false;">Login</a></li>
         <li><a href="#" onclick="toggleCart();return false;">Cart (<span id="cartCount">0</span>)</a></li>
       </ul>
     </nav>
@@ -456,6 +456,31 @@
 
 <div class="toast" id="toast">Added to cart</div>
 
+<!-- login modal -->
+<div id="authModal" style="display:none;position:fixed;inset:0;z-index:110;background:rgba(0,0,0,.6);align-items:center;justify-content:center;padding:20px;">
+  <div style="background:#e1dfd9;max-width:420px;width:100%;padding:38px 34px;position:relative;">
+    <button onclick="closeAuth()" style="position:absolute;top:14px;right:18px;background:none;border:0;font-size:26px;cursor:pointer;">&times;</button>
+    <div class="display" id="authTitle" style="font-size:26px;margin-bottom:24px;">Login</div>
+    <div class="field" id="authNameField" style="display:none;">
+      <label>Name</label>
+      <input type="text" id="authName" autocomplete="name">
+    </div>
+    <div class="field">
+      <label>Email</label>
+      <input type="email" id="authEmail" autocomplete="email">
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="authPass" autocomplete="current-password" style="width:100%;background:rgba(255,255,255,.65);border:1px solid #000;border-radius:14px;padding:14px 16px;font-family:inherit;font-size:16px;font-weight:500;outline:none;">
+    </div>
+    <p id="authErr" style="color:#9a3b2e;font-size:14px;font-weight:600;margin:0 0 14px;display:none;"></p>
+    <button class="pill" style="width:100%;" id="authSubmit" onclick="authSubmit()">Login</button>
+    <p style="font-size:14px;font-weight:600;margin-top:16px;text-align:center;">
+      <a href="#" id="authSwap" onclick="swapAuthMode();return false;" style="text-decoration:underline;">Need an account? Register</a>
+    </p>
+  </div>
+</div>
+
 <!-- cart drawer -->
 <div id="cartDrawer" style="position:fixed;top:0;right:-380px;width:360px;max-width:92vw;height:100vh;background:#fff;z-index:100;box-shadow:-12px 0 40px rgba(0,0,0,.18);transition:right .35s ease;display:flex;flex-direction:column;">
   <div style="display:flex;justify-content:space-between;align-items:center;padding:22px 24px;border-bottom:1px solid #e1dfd9;">
@@ -550,7 +575,9 @@
   function checkout(){
     var c=getCart();
     if(!c.length){toast('Cart is empty');return;}
-    fetch('/api/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({items:c})})
+    var hdrs={'Content-Type':'application/json'};
+    if(localStorage.getItem('cz_token')) hdrs['Authorization']='Bearer '+localStorage.getItem('cz_token');
+    fetch('/api/checkout',{method:'POST',headers:hdrs,body:JSON.stringify({items:c})})
       .then(function(r){if(!r.ok)throw 0;return r.json();})
       .then(function(d){
         if(d.url){location.href=d.url;}
@@ -560,6 +587,51 @@
       .catch(function(){toast('Demo mode — deploy the backend for real checkout');});
   }
   renderCart();
+
+  // ---- auth (register/login against the backend; demo notice on static hosting) ----
+  var authMode='login';
+  function getToken(){return localStorage.getItem('cz_token')||'';}
+  function getUser(){try{return JSON.parse(localStorage.getItem('cz_user'));}catch(e){return null;}}
+  function setAuth(token,user){
+    if(token){localStorage.setItem('cz_token',token);localStorage.setItem('cz_user',JSON.stringify(user));}
+    else{localStorage.removeItem('cz_token');localStorage.removeItem('cz_user');}
+    renderAuth();
+  }
+  function renderAuth(){
+    var u=getUser();
+    document.getElementById('authLink').textContent = u ? ('Logout ('+(u.name||u.email.split('@')[0])+')') : 'Login';
+  }
+  function authClick(){
+    if(getUser()){
+      fetch('/api/auth/logout',{method:'POST',headers:{'Authorization':'Bearer '+getToken()}}).catch(function(){});
+      setAuth(null);toast('Logged out');
+    } else {
+      document.getElementById('authModal').style.display='flex';
+    }
+  }
+  function closeAuth(){document.getElementById('authModal').style.display='none';document.getElementById('authErr').style.display='none';}
+  function swapAuthMode(){
+    authMode = authMode==='login' ? 'register' : 'login';
+    document.getElementById('authTitle').textContent = authMode==='login'?'Login':'Register';
+    document.getElementById('authSubmit').textContent = authMode==='login'?'Login':'Create Account';
+    document.getElementById('authSwap').textContent = authMode==='login'?'Need an account? Register':'Have an account? Login';
+    document.getElementById('authNameField').style.display = authMode==='login'?'none':'block';
+  }
+  function authSubmit(){
+    var email=document.getElementById('authEmail').value.trim();
+    var pass=document.getElementById('authPass').value;
+    var name=document.getElementById('authName').value.trim();
+    var err=document.getElementById('authErr');
+    if(!email||!pass){err.textContent='Email and password required.';err.style.display='block';return;}
+    fetch('/api/auth/'+authMode,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email,password:pass,name:name})})
+      .then(function(r){return r.json().then(function(d){return {ok:r.ok,d:d};});})
+      .then(function(x){
+        if(!x.ok){err.textContent=x.d.error||'Something went wrong.';err.style.display='block';return;}
+        setAuth(x.d.token,x.d.user);closeAuth();toast('Welcome, '+(x.d.user.name||x.d.user.email));
+      })
+      .catch(function(){err.textContent='Login needs the backend deployed — static demo has no server.';err.style.display='block';});
+  }
+  renderAuth();
 
   // ---- contact form (posts to backend when deployed) ----
   function demoSend(e){

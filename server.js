@@ -5,6 +5,7 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -22,6 +23,42 @@ function readOrders() {
 }
 function writeOrders(orders) {
   fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders, null, 2));
+}
+
+// ---------- auth (users.json + session tokens; passwords hashed with scrypt) ----------
+const USERS_FILE = path.join(__dirname, 'users.json');
+const SESSIONS_FILE = path.join(__dirname, 'sessions.json');
+function readJson(f, fallback) { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch { return fallback; } }
+function writeJson(f, v) { fs.writeFileSync(f, JSON.stringify(v, null, 2)); }
+
+function hashPassword(password) {
+  const salt = crypto.randomBytes(16).toString('hex');
+  const hash = crypto.scryptSync(password, salt, 64).toString('hex');
+  return `${salt}:${hash}`;
+}
+function verifyPassword(password, stored) {
+  const [salt, hash] = String(stored).split(':');
+  if (!salt || !hash) return false;
+  const check = crypto.scryptSync(password, salt, 64).toString('hex');
+  return crypto.timingSafeEqual(Buffer.from(hash, 'hex'), Buffer.from(check, 'hex'));
+}
+function createSession(email) {
+  const token = crypto.randomBytes(32).toString('hex');
+  const sessions = readJson(SESSIONS_FILE, {});
+  sessions[token] = { email, created: Date.now() };
+  writeJson(SESSIONS_FILE, sessions);
+  return token;
+}
+function getSessionUser(req) {
+  const auth = req.headers.authorization || '';
+  const token = auth.startsWith('Bearer ') ? auth.slice(7) : null;
+  if (!token) return null;
+  const sessions = readJson(SESSIONS_FILE, {});
+  const s = sessions[token];
+  if (!s || Date.now() - s.created > 1000 * 60 * 60 * 24 * 30) return null; // 30-day expiry
+  const users = readJson(USERS_FILE, []);
+  const u = users.find(x => x.email === s.email);
+  return u ? { email: u.email, name: u.name, token } : null;
 }
 
 // Stripe webhook needs the raw body — register before json parser
@@ -55,6 +92,55 @@ app.use(express.static(__dirname, { extensions: ['html'] }));
 // ---- API ----
 app.get('/api/health', (_req, res) => res.json({ ok: true, stripe: !!stripe }));
 
+// ---- auth routes ----
+app.post('/api/auth/register', (req, res) => {
+  const { email, password, name } = req.body || {};
+  if (!email || !password || String(password).length < 6) {
+    return res.status(400).json({ error: 'Email and a password of 6+ characters required.' });
+  }
+  const users = readJson(USERS_FILE, []);
+  const norm = String(email).toLowerCase().trim();
+  if (users.find(u => u.email === norm)) return res.status(409).json({ error: 'Account already exists — log in instead.' });
+  users.push({ email: norm, name: String(name || '').slice(0, 80), password: hashPassword(String(password)), created: new Date().toISOString() });
+  writeJson(USERS_FILE, users);
+  const token = createSession(norm);
+  res.json({ token, user: { email: norm, name: name || '' } });
+});
+
+app.post('/api/auth/login', (req, res) => {
+  const { email, password } = req.body || {};
+  const users = readJson(USERS_FILE, []);
+  const u = users.find(x => x.email === String(email || '').toLowerCase().trim());
+  if (!u || !verifyPassword(String(password || ''), u.password)) {
+    return res.status(401).json({ error: 'Invalid email or password.' });
+  }
+  const token = createSession(u.email);
+  res.json({ token, user: { email: u.email, name: u.name } });
+});
+
+app.get('/api/auth/me', (req, res) => {
+  const u = getSessionUser(req);
+  if (!u) return res.status(401).json({ error: 'not logged in' });
+  res.json({ email: u.email, name: u.name });
+});
+
+app.post('/api/auth/logout', (req, res) => {
+  const u = getSessionUser(req);
+  if (u) {
+    const sessions = readJson(SESSIONS_FILE, {});
+    delete sessions[u.token];
+    writeJson(SESSIONS_FILE, sessions);
+  }
+  res.json({ ok: true });
+});
+
+// Orders belonging to the logged-in user
+app.get('/api/orders/mine', (req, res) => {
+  const u = getSessionUser(req);
+  if (!u) return res.status(401).json({ error: 'not logged in' });
+  res.json(readOrders().filter(o => o.email === u.email));
+});
+
 app.get('/api/products', (_req, res) => res.json(products));
 
 // Create a Stripe Checkout session from cart items [{id, qty}]
@@ -77,11 +163,14 @@ app.post('/api/checkout', async (req, res) => {
 
   if (!line_items.length) return res.status(400).json({ error: 'Cart is empty or invalid.' });
 
+  const user = getSessionUser(req);
+
   if (!stripe) {
     // Backend running but Stripe not configured — record a demo order instead
     const orders = readOrders();
     const order = {
       id: 'demo_' + Date.now(),
+      email: user ? user.email : null,
       items,
       amount_total: line_items.reduce((s, li) => s + li.price_data.unit_amount * li.quantity, 0),
       currency: 'usd',
@@ -96,6 +185,7 @@ app.post('/api/checkout', async (req, res) => {
   try {
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
+      customer_email: user ? user.email : undefined,
       line_items,
       success_url: `${BASE_URL}/?checkout=success`,
       cancel_url: `${BASE_URL}/?checkout=cancelled`

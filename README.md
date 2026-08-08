@@ -17,7 +17,7 @@ Works immediately with no keys — checkout records demo orders to `orders.json`
 ## Enable real payments (Stripe test mode)
 
 1. Create a Stripe account → https://dashboard.stripe.com
-2. Copy `env.example` values into your host's environment settings:
+2. Copy `.env.example` values into your host's environment settings:
    - `STRIPE_SECRET_KEY` — Developers → API keys (start with `sk_test_...`)
    - `STRIPE_WEBHOOK_SECRET` — Developers → Webhooks → add endpoint `https://<your-host>/api/stripe/webhook`, event `checkout.session.completed`
    - `ADMIN_TOKEN` — any long random string
@@ -38,10 +38,19 @@ Railway, Fly.io, or any Node host works the same way.
 |---|---|---|
 | GET | `/api/health` | Server + Stripe status |
 | GET | `/api/products` | Product catalog (`products.json`) |
-| POST | `/api/checkout` | `{items:[{id,qty}]}` → Stripe Checkout URL (or demo order) |
+| POST | `/api/auth/register` | `{email,password,name}` → session token (passwords scrypt-hashed) |
+| POST | `/api/auth/login` | `{email,password}` → session token (30-day expiry) |
+| GET | `/api/auth/me` | Current user (`Authorization: Bearer <token>`) |
+| POST | `/api/auth/logout` | Invalidate session |
+| POST | `/api/checkout` | `{items:[{id,qty}]}` → Stripe Checkout URL (or demo order); ties to user if logged in |
+| GET | `/api/orders/mine` | Logged-in user's orders |
 | POST | `/api/contact` | Store contact-form message |
 | POST | `/api/stripe/webhook` | Stripe payment confirmations |
-| GET | `/api/orders` | Order list (`Authorization: Bearer <ADMIN_TOKEN>`) |
+| GET | `/api/orders` | All orders (`Authorization: Bearer <ADMIN_TOKEN>`) |
+
+## Auth
+
+Users are stored in `users.json` (scrypt-hashed passwords, never plain text), sessions in `sessions.json` — both gitignored. The Login link in the nav opens a register/login modal; the session persists in the browser for 30 days. Swap the JSON files for a database when you outgrow them.
 
 ## Notes
 
