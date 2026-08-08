@@ -3,424 +3,438 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>COORDINATEZ — Ceremonial Matcha &amp; Teaware</title>
-<meta name="description" content="COORDINATEZ — small-batch ceremonial matcha and handmade teaware. Static frontend demo.">
+<title>COORDINATEZ | Explore, Taste, Elevate Your Matcha Experience</title>
+<meta name="description" content="COORDINATEZ — ceremonial matcha, teaware and workshops. Static frontend demo.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --cream:#f6f3ec;
-    --paper:#fbf9f4;
-    --ink:#1c1c1a;
-    --ink-soft:#4a4a45;
-    --matcha:#6f7f4e;
-    --matcha-deep:#45522f;
-    --line:#dcd6c8;
-    --sale:#9a3b2e;
+    --bg:#e1dfd9;
+    --black:#000;
+    --white:#fff;
+    --green:#209d50;
+    --green-dark:#1a8342;
+    --gray:#8f8d87;
   }
   *{margin:0;padding:0;box-sizing:border-box;}
   html{scroll-behavior:smooth;}
   body{
-    font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;
-    background:var(--cream);
-    color:var(--ink);
-    line-height:1.6;
+    font-family:"Space Grotesk",sans-serif;
+    font-weight:600;
+    background:var(--bg);
+    color:var(--black);
+    line-height:1.5;
     -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
   }
-  img,svg{display:block;max-width:100%;}
+  img{display:block;max-width:100%;}
   a{color:inherit;text-decoration:none;}
-  h1,h2,h3{font-weight:500;letter-spacing:.14em;text-transform:uppercase;}
-  .wrap{max-width:1180px;margin:0 auto;padding:0 24px;}
-
-  /* ---------- Header ---------- */
-  header{
-    position:sticky;top:0;z-index:50;
-    background:rgba(246,243,236,.92);
-    backdrop-filter:blur(8px);
-    border-bottom:1px solid var(--line);
+  .display{
+    font-family:"Archivo Black",sans-serif;
+    font-weight:400;
+    text-transform:uppercase;
+    letter-spacing:-.02em;
+    line-height:1.02;
   }
+  .wrap{max-width:1400px;margin:0 auto;padding:0 58px;}
+  @media (max-width:760px){ .wrap{padding:0 24px;} }
+
+  /* ---------- reveal on scroll ---------- */
+  .rv{opacity:0;transform:translateY(34px);transition:opacity .9s cubic-bezier(.22,.61,.36,1),transform .9s cubic-bezier(.22,.61,.36,1);}
+  .rv.in{opacity:1;transform:none;}
+
+  /* ---------- pill buttons ---------- */
+  .pill{
+    display:inline-block;
+    background:var(--green);
+    color:var(--white);
+    font-family:"Space Grotesk",sans-serif;
+    font-weight:600;
+    font-size:16px;
+    text-transform:uppercase;
+    letter-spacing:.02em;
+    border:0;
+    border-radius:300px;
+    padding:13px 20px;
+    cursor:pointer;
+    text-align:center;
+    transition:background .25s ease,transform .25s ease;
+  }
+  .pill:hover{background:var(--green-dark);transform:scale(1.03);}
+  .pill-lg{padding:26px 52px;font-size:17px;}
+
+  /* ---------- header ---------- */
+  header{background:var(--black);color:var(--white);}
   .nav{
     display:flex;align-items:center;justify-content:space-between;
-    height:72px;
+    padding:26px 58px;
   }
-  .logo{
-    font-size:1.15rem;font-weight:600;letter-spacing:.32em;text-transform:uppercase;
-  }
-  .logo span{color:var(--matcha);}
-  nav ul{display:flex;gap:36px;list-style:none;align-items:center;}
-  nav a{
-    font-size:.78rem;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-soft);
-    padding:6px 0;border-bottom:1px solid transparent;transition:all .25s ease;
-  }
-  nav a:hover{color:var(--ink);border-bottom-color:var(--ink);}
-  .cart-link{color:var(--ink);}
-  .burger{
-    display:none;background:none;border:0;cursor:pointer;width:34px;height:26px;
-    flex-direction:column;justify-content:space-between;padding:2px 0;
-  }
-  .burger span{height:2px;width:100%;background:var(--ink);transition:transform .3s ease,opacity .3s ease;}
-  .burger.open span:nth-child(1){transform:translateY(10px) rotate(45deg);}
-  .burger.open span:nth-child(2){opacity:0;}
-  .burger.open span:nth-child(3){transform:translateY(-10px) rotate(-45deg);}
+  .logo{font-family:"Archivo Black",sans-serif;font-size:22px;letter-spacing:.06em;text-transform:uppercase;color:var(--white);}
+  nav ul{display:flex;gap:34px;list-style:none;}
+  nav a{font-size:16px;font-weight:600;color:var(--white);opacity:.95;transition:opacity .2s;}
+  nav a:hover{opacity:.6;}
+  .burger{display:none;background:none;border:0;cursor:pointer;flex-direction:column;gap:6px;padding:4px;}
+  .burger span{display:block;width:26px;height:2px;background:#fff;transition:.3s;}
 
-  /* ---------- Hero ---------- */
+  /* ---------- hero ---------- */
   .hero{
-    position:relative;min-height:88vh;display:flex;align-items:center;justify-content:center;
-    text-align:center;color:#fdfcf8;overflow:hidden;
+    background:var(--black);
+    color:var(--white);
+    min-height:104vh;
+    position:relative;
+    display:flex;flex-direction:column;
   }
-  .hero-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
-  .hero::after{content:"";position:absolute;inset:0;background:rgba(20,26,12,.38);}
-  .hero-inner{position:relative;z-index:2;padding:48px 24px;max-width:760px;}
-  .hero h1{font-size:clamp(2rem,5.4vw,3.6rem);line-height:1.15;margin-bottom:22px;}
-  .hero p{font-size:1.02rem;max-width:560px;margin:0 auto 34px;color:#f2efe6;}
-  .btn{
-    display:inline-block;padding:15px 42px;font-size:.78rem;letter-spacing:.22em;text-transform:uppercase;
-    border:1px solid currentColor;transition:all .3s ease;cursor:pointer;background:transparent;color:inherit;
-    font-family:inherit;
+  .hero h1{
+    font-size:clamp(44px,4.6vw,66px);
+    text-align:center;
+    max-width:640px;
+    margin:70px 0 0 122px;
+    color:var(--white);
   }
-  .btn:hover{background:#fdfcf8;color:var(--ink);border-color:#fdfcf8;}
-  .btn-dark{background:var(--ink);color:var(--cream);border-color:var(--ink);}
-  .btn-dark:hover{background:var(--matcha-deep);border-color:var(--matcha-deep);color:var(--cream);}
-
-  /* ---------- Sections ---------- */
-  section{padding:96px 0;}
-  .kicker{font-size:.72rem;letter-spacing:.3em;text-transform:uppercase;color:var(--matcha-deep);margin-bottom:14px;}
-  .section-title{font-size:clamp(1.4rem,3vw,2rem);margin-bottom:16px;}
-  .section-head{text-align:center;max-width:640px;margin:0 auto 64px;}
-  .section-head p{color:var(--ink-soft);}
-
-  /* ---------- Products ---------- */
-  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:36px;}
-  .card{background:var(--paper);border:1px solid var(--line);display:flex;flex-direction:column;transition:transform .3s ease,box-shadow .3s ease;}
-  .card:hover{transform:translateY(-6px);box-shadow:0 18px 40px rgba(28,28,26,.10);}
-  .card .thumb{aspect-ratio:1/1;overflow:hidden;}
-  .card .thumb svg{width:100%;height:100%;transition:transform .5s ease;}
-  .card:hover .thumb svg{transform:scale(1.04);}
-  .card-body{padding:26px 24px 30px;display:flex;flex-direction:column;flex:1;}
-  .card h3{font-size:.95rem;margin-bottom:8px;}
-  .card .desc{font-size:.88rem;color:var(--ink-soft);margin-bottom:18px;flex:1;}
-  .price{font-size:.95rem;margin-bottom:18px;letter-spacing:.06em;}
-  .price s{color:var(--ink-soft);margin-right:10px;}
-  .price .sale{color:var(--sale);}
-  .card .btn{align-self:flex-start;padding:12px 30px;}
-  .card .btn:hover{background:var(--ink);color:var(--cream);border-color:var(--ink);}
-  .shop-all{text-align:center;margin-top:56px;}
-  .text-link{
-    font-size:.78rem;letter-spacing:.22em;text-transform:uppercase;border-bottom:1px solid var(--ink);
-    padding-bottom:4px;transition:color .25s ease,border-color .25s ease;
+  .hero-intro{
+    margin:auto 58px 64px auto;
+    max-width:560px;
   }
-  .text-link:hover{color:var(--matcha-deep);border-color:var(--matcha-deep);}
-
-  /* ---------- Workshop ---------- */
-  .workshop{background:var(--paper);border-top:1px solid var(--line);border-bottom:1px solid var(--line);}
-  .split{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center;}
-  .split .media{border:1px solid var(--line);}
-  .split .media svg{width:100%;height:auto;}
-  .split h2{font-size:clamp(1.3rem,2.6vw,1.8rem);margin-bottom:18px;}
-  .split p{color:var(--ink-soft);margin-bottom:16px;}
-  .badge{
-    display:inline-block;font-size:.68rem;letter-spacing:.26em;text-transform:uppercase;
-    background:var(--matcha-deep);color:var(--cream);padding:7px 16px;margin-bottom:20px;
-  }
-  .split .btn-dark{margin-top:12px;}
-
-  /* ---------- About ---------- */
-  .about{text-align:center;}
-  .about blockquote{
-    font-size:clamp(1.25rem,3vw,1.9rem);font-weight:400;letter-spacing:.04em;line-height:1.5;
-    max-width:820px;margin:0 auto 26px;
-  }
-  .about blockquote em{color:var(--matcha-deep);font-style:normal;}
-  .about p{max-width:620px;margin:0 auto;color:var(--ink-soft);}
-
-  /* ---------- Gallery strip ---------- */
-  .gallery{padding:0 0 96px;}
-  .strip{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
-  .strip a{overflow:hidden;border:1px solid var(--line);}
-  .strip svg{width:100%;height:100%;transition:transform .5s ease;}
-  .strip a:hover svg{transform:scale(1.06);}
-  .gallery .tag{text-align:center;margin-top:26px;font-size:.78rem;letter-spacing:.24em;text-transform:uppercase;color:var(--ink-soft);}
-
-  /* ---------- CTA ---------- */
-  .cta{background:var(--ink);color:var(--cream);text-align:center;}
-  .cta h2{font-size:clamp(1.3rem,2.8vw,1.9rem);margin-bottom:18px;}
-  .cta p{max-width:560px;margin:0 auto 34px;color:#cfcbbf;}
-  .cta .btn:hover{background:var(--cream);color:var(--ink);border-color:var(--cream);}
-
-  /* ---------- Footer ---------- */
-  footer{background:var(--cream);padding:72px 0 36px;border-top:1px solid var(--line);}
-  .foot-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px;margin-bottom:56px;}
-  footer h4{font-size:.72rem;letter-spacing:.26em;text-transform:uppercase;margin-bottom:16px;color:var(--ink-soft);}
-  footer li{list-style:none;margin-bottom:10px;font-size:.9rem;}
-  footer a:hover{color:var(--matcha-deep);}
-  .foot-brand .logo{margin-bottom:14px;}
-  .foot-brand p{font-size:.85rem;color:var(--ink-soft);max-width:280px;}
-  .foot-bottom{
-    border-top:1px solid var(--line);padding-top:26px;display:flex;justify-content:space-between;
-    font-size:.75rem;letter-spacing:.12em;color:var(--ink-soft);flex-wrap:wrap;gap:10px;
+  .hero-intro .lead{font-size:clamp(19px,1.6vw,23px);font-weight:600;margin-bottom:22px;}
+  .hero-intro p{font-size:16px;font-weight:500;color:#eee;margin-bottom:14px;}
+  @media (max-width:900px){
+    .hero{min-height:92vh;}
+    .hero h1{margin:64px auto 0;padding:0 24px;}
+    .hero-intro{margin:48px 24px 56px;}
   }
 
-  /* ---------- Toast ---------- */
+  /* ---------- products ---------- */
+  .products{padding:110px 0 90px;}
+  .products h2{font-size:clamp(30px,2.7vw,40px);color:var(--green);margin-bottom:74px;}
+  .prod-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:54px;}
+  .prod{display:flex;flex-direction:column;align-items:center;position:relative;}
+  .prod .ph{
+    width:100%;max-width:430px;aspect-ratio:1/1;border-radius:50%;overflow:hidden;position:relative;
+  }
+  .prod .ph img{width:100%;height:100%;object-fit:cover;transition:transform .6s ease;}
+  .prod:hover .ph img{transform:scale(1.05);}
+  .sale-badge{
+    position:absolute;top:26px;left:8px;z-index:2;
+    background:var(--black);color:var(--white);
+    font-size:14px;font-weight:600;text-transform:uppercase;
+    padding:6px 12px;letter-spacing:.04em;
+  }
+  .prod h3{font-size:clamp(19px,1.6vw,23px);font-weight:700;text-align:center;margin:34px 0 6px;}
+  .prod .price{font-size:19px;font-weight:700;margin-bottom:22px;}
+  .prod .price .was{color:var(--gray);text-decoration:line-through;margin-left:10px;font-weight:600;}
+  .prod-actions{display:flex;gap:10px;width:100%;max-width:430px;}
+  .qty{
+    display:flex;align-items:center;justify-content:space-between;
+    border:1px solid var(--black);border-radius:300px;
+    padding:12px 18px;min-width:132px;background:var(--white);
+    font-weight:600;font-size:16px;user-select:none;
+  }
+  .qty button{background:none;border:0;font-size:18px;cursor:pointer;line-height:1;padding:0 4px;font-family:inherit;}
+  .prod-actions .pill{flex:1;}
+  .shop-all{margin-top:84px;}
+  @media (max-width:900px){
+    .prod-grid{grid-template-columns:1fr;gap:64px;max-width:460px;margin:0 auto;}
+  }
+
+  /* ---------- workshop ---------- */
+  .workshop{background:var(--white);padding:110px 0 120px;}
+  .ws-top{display:flex;justify-content:space-between;align-items:flex-start;gap:40px;margin-bottom:86px;}
+  .ws-top h2{font-size:clamp(40px,5vw,74px);color:var(--green);max-width:700px;}
+  .ws-imgs{display:flex;justify-content:space-between;gap:40px;}
+  .ws-tile{width:30%;aspect-ratio:1/1;overflow:hidden;position:relative;}
+  .ws-tile img{width:100%;height:100%;object-fit:cover;transition:transform .6s ease;}
+  .ws-tile:hover img{transform:scale(1.05);}
+  .ws-quote{
+    background:linear-gradient(160deg,#5a7a3f 0%,#7d9a55 35%,#4c6b34 70%,#39522a 100%);
+    display:flex;align-items:center;justify-content:flex-start;
+    padding:34px;
+  }
+  .ws-quote span{
+    font-family:Georgia,'Times New Roman',serif;font-weight:400;
+    color:#eef3e2;font-size:clamp(20px,2vw,30px);line-height:1.35;
+  }
+  .ws-spacer{width:30%;}
+  @media (max-width:900px){
+    .ws-top{flex-direction:column;}
+    .ws-imgs{flex-direction:column;}
+    .ws-tile{width:100%;}
+    .ws-spacer{display:none;}
+  }
+
+  /* ---------- learn ---------- */
+  .learn{padding:120px 0;}
+  .learn h2{
+    font-size:clamp(46px,6.4vw,92px);
+    text-align:center;color:var(--black);
+    margin-bottom:80px;
+  }
+  .learn-photo{max-width:330px;margin:0 auto 70px;overflow:hidden;}
+  .learn-photo img{width:100%;transition:transform .6s ease;}
+  .learn-photo:hover img{transform:scale(1.04);}
+  .learn p{
+    max-width:460px;margin:0 auto 26px;text-align:center;
+    font-size:17.5px;font-weight:600;
+  }
+
+  /* ---------- about ---------- */
+  .about{padding:20px 0 130px;}
+  .about-photo{width:100%;height:520px;overflow:hidden;margin-bottom:76px;}
+  .about-photo img{width:100%;height:100%;object-fit:cover;}
+  .about-cols{display:grid;grid-template-columns:1fr 1fr;gap:56px;}
+  .about-cols h2{font-size:clamp(28px,2.8vw,42px);}
+  .about-text{max-width:420px;}
+  .about-text p{font-size:17.5px;font-weight:600;margin-bottom:24px;}
+  @media (max-width:900px){
+    .about-cols{grid-template-columns:1fr;}
+    .about-photo{height:300px;}
+  }
+
+  /* ---------- social ---------- */
+  .social{padding:0 0 120px;}
+  .social h2{font-size:clamp(28px,2.8vw,42px);margin-bottom:56px;}
+  .gal{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:64px;}
+  .gal a{aspect-ratio:1/1;overflow:hidden;display:block;}
+  .gal img{width:100%;height:100%;object-fit:cover;transition:transform .6s ease;}
+  .gal a:hover img{transform:scale(1.06);}
+  .social .center{text-align:center;}
+  @media (max-width:900px){ .gal{grid-template-columns:repeat(2,1fr);} }
+
+  /* ---------- work with (contact) ---------- */
+  .contact{
+    position:relative;color:var(--black);
+    padding:120px 0 320px;overflow:hidden;
+    background:linear-gradient(120deg,#4ba161,#2f8a4d 30%,#e6e4dc 55%,#4ba161 80%,#2f8a4d);
+    background-size:300% 300%;
+    animation:bgflow 16s ease-in-out infinite;
+  }
+  @keyframes bgflow{
+    0%{background-position:0% 50%;}
+    50%{background-position:100% 50%;}
+    100%{background-position:0% 50%;}
+  }
+  .contact-cols{display:grid;grid-template-columns:1fr 1fr;gap:70px;position:relative;z-index:2;}
+  .contact h2{font-size:clamp(40px,4.6vw,66px);margin-bottom:44px;}
+  .contact h2 .brand{color:var(--green);display:block;}
+  .contact .blurb p{font-size:17px;font-weight:600;margin-bottom:22px;max-width:440px;}
+  .field label{display:block;font-size:17px;font-weight:700;margin:0 0 8px;}
+  .field small{font-weight:500;font-size:14px;margin-left:6px;}
+  .field{margin-bottom:26px;}
+  .name-row{display:grid;grid-template-columns:1fr 1fr;gap:26px;}
+  input[type=text],input[type=email],textarea{
+    width:100%;background:rgba(255,255,255,.65);
+    border:1px solid var(--black);border-radius:14px;
+    padding:14px 16px;font-family:inherit;font-size:16px;font-weight:500;
+    outline:none;transition:box-shadow .2s;
+  }
+  input:focus,textarea:focus{box-shadow:0 0 0 2px var(--black);}
+  textarea{min-height:110px;resize:vertical;}
+  .sublabel{font-size:14.5px;font-weight:600;margin:6px 0 0;}
+  @media (max-width:900px){
+    .contact{padding:90px 0 200px;}
+    .contact-cols{grid-template-columns:1fr;}
+  }
+
+  /* ---------- footer ---------- */
+  footer{padding:100px 0 120px;}
+  .foot{display:grid;grid-template-columns:1.4fr .6fr 1fr;gap:56px;}
+  .foot-brand .display:first-child{color:var(--green);font-size:clamp(40px,4.6vw,64px);margin-bottom:26px;}
+  .foot-brand .display:last-child{font-size:clamp(30px,3.6vw,56px);}
+  footer h4{font-family:"Archivo Black",sans-serif;font-weight:400;text-transform:uppercase;font-size:clamp(20px,1.8vw,26px);margin-bottom:34px;letter-spacing:-.01em;}
+  footer p{font-size:17px;font-weight:600;margin-bottom:12px;}
+  .foot-contact a{font-size:clamp(18px,1.6vw,24px);font-weight:700;text-transform:uppercase;display:block;margin-bottom:8px;}
+  .foot-contact a:hover{color:var(--green);}
+  @media (max-width:900px){ .foot{grid-template-columns:1fr;gap:44px;} }
+
+  /* ---------- toast ---------- */
   .toast{
     position:fixed;bottom:26px;left:50%;transform:translate(-50%,20px);opacity:0;
-    background:var(--ink);color:var(--cream);padding:12px 26px;font-size:.78rem;letter-spacing:.16em;
-    text-transform:uppercase;pointer-events:none;transition:all .35s ease;z-index:80;
+    background:var(--black);color:var(--white);padding:13px 28px;font-size:14px;font-weight:600;
+    letter-spacing:.08em;text-transform:uppercase;border-radius:300px;
+    pointer-events:none;transition:all .35s ease;z-index:90;
   }
   .toast.show{opacity:1;transform:translate(-50%,0);}
 
-  /* ---------- Mobile ---------- */
-  @media (max-width:900px){
-    .grid-3{grid-template-columns:1fr;max-width:440px;margin:0 auto;}
-    .split{grid-template-columns:1fr;gap:40px;}
-    .strip{grid-template-columns:repeat(2,1fr);}
-    .foot-grid{grid-template-columns:1fr 1fr;}
-    section{padding:72px 0;}
-  }
+  /* ---------- mobile nav ---------- */
   @media (max-width:760px){
+    .nav{padding:20px 24px;}
+    nav{position:absolute;top:70px;left:0;right:0;background:var(--black);z-index:60;
+        max-height:0;overflow:hidden;transition:max-height .35s ease;}
+    nav.open{max-height:300px;}
+    nav ul{flex-direction:column;gap:0;padding:10px 0;}
+    nav li{text-align:center;}
+    nav a{display:block;padding:14px;}
     .burger{display:flex;}
-    nav{
-      position:fixed;top:72px;right:0;left:0;background:var(--paper);
-      border-bottom:1px solid var(--line);
-      max-height:0;overflow:hidden;transition:max-height .35s ease;
-    }
-    nav.open{max-height:340px;}
-    nav ul{flex-direction:column;gap:0;padding:12px 0;}
-    nav li{width:100%;text-align:center;}
-    nav a{display:block;padding:14px 0;font-size:.85rem;}
-    .hero{min-height:76vh;}
-    .foot-grid{grid-template-columns:1fr;gap:32px;}
-    .foot-bottom{flex-direction:column;text-align:center;}
+    .hero h1{font-size:44px;}
   }
 </style>
 </head>
 <body>
 
 <header>
-  <div class="wrap nav">
-    <a class="logo" href="#top">COORDINATE<span>Z</span></a>
-    <button class="burger" id="burger" aria-label="Menu" aria-expanded="false">
-      <span></span><span></span><span></span>
-    </button>
+  <div class="nav">
+    <a class="logo" href="#top">COORDINATEZ</a>
+    <button class="burger" id="burger" aria-label="Menu"><span></span><span></span><span></span></button>
     <nav id="nav">
       <ul>
         <li><a href="#shop">Shop</a></li>
-        <li><a href="#workshops">Workshops</a></li>
-        <li><a href="#about">About</a></li>
         <li><a href="#contact">Contact</a></li>
         <li><a href="#" onclick="return false;">Login</a></li>
-        <li><a href="#" class="cart-link" onclick="return false;">Cart (<span id="cartCount">0</span>)</a></li>
+        <li><a href="#" onclick="return false;">Cart (<span id="cartCount">0</span>)</a></li>
       </ul>
     </nav>
   </div>
 </header>
 
-<!-- ================= HERO ================= -->
-<section class="hero" id="top" style="padding:0;">
-  <svg class="hero-bg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-    <defs>
-      <linearGradient id="heroGrad" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stop-color="#5c6b40"/>
-        <stop offset=".55" stop-color="#75855180"/>
-        <stop offset="1" stop-color="#3d4a2a"/>
-      </linearGradient>
-      <radialGradient id="bowlGlow" cx=".5" cy=".55" r=".6">
-        <stop offset="0" stop-color="#a8b57e" stop-opacity=".9"/>
-        <stop offset="1" stop-color="#5c6b40" stop-opacity="0"/>
-      </radialGradient>
-    </defs>
-    <rect width="1600" height="900" fill="url(#heroGrad)"/>
-    <circle cx="800" cy="500" r="430" fill="url(#bowlGlow)"/>
-    <ellipse cx="800" cy="560" rx="300" ry="90" fill="#2f3a1e" opacity=".55"/>
-    <ellipse cx="800" cy="540" rx="280" ry="80" fill="#8a9a60" opacity=".8"/>
-    <ellipse cx="800" cy="535" rx="235" ry="62" fill="#a9ba7a" opacity=".9"/>
-    <path d="M600 520 q200 -70 400 0" stroke="#dfe8c2" stroke-width="6" fill="none" opacity=".6"/>
-    <path d="M640 545 q160 -50 320 0" stroke="#dfe8c2" stroke-width="4" fill="none" opacity=".4"/>
-  </svg>
-  <div class="hero-inner">
-    <h1>Stillness, Whisked To Life</h1>
-    <p>Small-batch ceremonial matcha and handmade teaware, sourced with care and blended with intent. We treat every bowl as a pause worth taking — not a trend worth chasing.</p>
-    <a href="#shop" class="btn">Shop the Collection</a>
+<!-- ============ HERO ============ -->
+<section class="hero" id="top">
+  <h1 class="display rv">Every shade, perfectly coordinated</h1>
+  <div class="hero-intro rv">
+    <p class="lead">Coordinatez started with one simple idea — matcha deserves to be experienced properly.</p>
+    <p>Grounded in Kyoto's tea heritage and built for modern life, Coordinatez pairs careful sourcing with thoughtful blending and intentional preparation. Each bowl and every tin carries our commitment to depth, balance, and quality.</p>
+    <p>To us, matcha is more than a drink.<br>It is a ritual.<br>A pause.<br>A moment of clarity in a busy day.</p>
   </div>
 </section>
 
-<!-- ================= PRODUCTS ================= -->
-<section id="shop">
+<!-- ============ PRODUCTS ============ -->
+<section class="products" id="shop">
   <div class="wrap">
-    <div class="section-head">
-      <div class="kicker">The Essentials</div>
-      <h2 class="section-title">Featured Goods</h2>
-      <p>A short list of what we reach for daily — tools and tea chosen for depth of flavor and honesty of craft.</p>
-    </div>
-    <div class="grid-3">
-      <article class="card">
-        <div class="thumb">
-          <svg viewBox="0 0 400 400" aria-hidden="true">
-            <rect width="400" height="400" fill="#efe9dc"/>
-            <ellipse cx="200" cy="300" rx="120" ry="26" fill="#d9d1bd"/>
-            <path d="M95 200 q0 90 105 90 q105 0 105 -90 q0 -55 -105 -55 q-105 0 -105 55z" fill="#7d6b55"/>
-            <path d="M105 195 q0 78 95 78 q95 0 95 -78" fill="none" stroke="#5d4f3e" stroke-width="5" opacity=".5"/>
-            <ellipse cx="200" cy="192" rx="98" ry="24" fill="#93805f"/>
-            <ellipse cx="200" cy="190" rx="86" ry="19" fill="#a9ba7a"/>
-          </svg>
-        </div>
-        <div class="card-body">
-          <h3>Ceramic Chawan</h3>
-          <p class="desc">A hand-thrown tea bowl by a Chicago ceramicist. Weighted for the whisk, glazed to keep every batch honest.</p>
-          <div class="price">$60.00</div>
-          <button class="btn" onclick="addToCart(this)">Add to Cart</button>
+    <h2 class="display rv">Our Products</h2>
+    <div class="prod-grid">
+      <article class="prod rv">
+        <span class="sale-badge">Sale</span>
+        <div class="ph"><img src="https://images.unsplash.com/photo-1565117661210-fd54898de423?auto=format&fit=crop&w=900&q=80" alt="Ceremonial matcha powder"></div>
+        <h3>Coordinatez House Blend 40g.</h3>
+        <div class="price">$43.00 <span class="was">$52.00</span></div>
+        <div class="prod-actions">
+          <div class="qty"><button onclick="qty(this,-1)">&minus;</button><span>1</span><button onclick="qty(this,1)">+</button></div>
+          <button class="pill" onclick="addToCart(this)">Add to Cart</button>
         </div>
       </article>
-
-      <article class="card">
-        <div class="thumb">
-          <svg viewBox="0 0 400 400" aria-hidden="true">
-            <rect width="400" height="400" fill="#e9efdd"/>
-            <rect x="140" y="110" width="120" height="190" rx="14" fill="#45522f"/>
-            <rect x="140" y="110" width="120" height="46" rx="14" fill="#37421f"/>
-            <rect x="158" y="180" width="84" height="76" rx="4" fill="#f6f3ec"/>
-            <text x="200" y="212" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="13" letter-spacing="2" fill="#1c1c1a">HOUSE</text>
-            <text x="200" y="232" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="13" letter-spacing="2" fill="#45522f">BLEND</text>
-          </svg>
-        </div>
-        <div class="card-body">
-          <h3>House Blend Matcha — 40g</h3>
-          <p class="desc">Our signature ceremonial blend, stone-milled from shaded Kyoto-grown leaf. Deep umami, soft sweetness, no bitterness.</p>
-          <div class="price"><s>$52.00</s><span class="sale">$43.00</span></div>
-          <button class="btn" onclick="addToCart(this)">Add to Cart</button>
+      <article class="prod rv">
+        <div class="ph"><img src="https://images.unsplash.com/photo-1515823064-d6e0c04616a7?auto=format&fit=crop&w=900&q=80" alt="Matcha chawan bowl"></div>
+        <h3>Matcha Chawan (Light) — Chicago Artist</h3>
+        <div class="price">$60.00</div>
+        <div class="prod-actions">
+          <div class="qty"><button onclick="qty(this,-1)">&minus;</button><span>1</span><button onclick="qty(this,1)">+</button></div>
+          <button class="pill" onclick="addToCart(this)">Add to Cart</button>
         </div>
       </article>
-
-      <article class="card">
-        <div class="thumb">
-          <svg viewBox="0 0 400 400" aria-hidden="true">
-            <rect width="400" height="400" fill="#f0ead9"/>
-            <rect x="185" y="90" width="30" height="80" rx="12" fill="#c9a86a"/>
-            <g stroke="#d8bc82" stroke-width="4" fill="none">
-              <path d="M200 168 q-70 60 -78 140"/>
-              <path d="M200 168 q-46 66 -50 142"/>
-              <path d="M200 168 q-20 70 -22 144"/>
-              <path d="M200 168 q0 72 0 146"/>
-              <path d="M200 168 q20 70 22 144"/>
-              <path d="M200 168 q46 66 50 142"/>
-              <path d="M200 168 q70 60 78 140"/>
-            </g>
-            <ellipse cx="200" cy="318" rx="110" ry="16" fill="#dfd6bd"/>
-          </svg>
-        </div>
-        <div class="card-body">
-          <h3>Bamboo Whisk — 150 Prong</h3>
-          <p class="desc">Hand-carved chasen with fine, springy tines for a dense, even foam. The one tool no shortcut replaces.</p>
-          <div class="price">$20.00</div>
-          <button class="btn" onclick="addToCart(this)">Add to Cart</button>
+      <article class="prod rv">
+        <div class="ph"><img src="https://images.unsplash.com/photo-1589698272390-0501a07619bb?auto=format&fit=crop&w=900&q=80" alt="Bamboo whisk"></div>
+        <h3>Whisk 150 prong.</h3>
+        <div class="price">$20.00</div>
+        <div class="prod-actions">
+          <div class="qty"><button onclick="qty(this,-1)">&minus;</button><span>1</span><button onclick="qty(this,1)">+</button></div>
+          <button class="pill" onclick="addToCart(this)">Add to Cart</button>
         </div>
       </article>
     </div>
-    <div class="shop-all"><a href="#shop" class="text-link">Shop All Goods</a></div>
+    <div class="shop-all rv"><a href="#shop" class="pill pill-lg">Shop All</a></div>
   </div>
 </section>
 
-<!-- ================= WORKSHOP ================= -->
-<section class="workshop" id="workshops">
-  <div class="wrap split">
-    <div class="media">
-      <svg viewBox="0 0 640 480" aria-hidden="true">
-        <rect width="640" height="480" fill="#e6e0cf"/>
-        <rect x="60" y="300" width="520" height="16" fill="#b8ac8e"/>
-        <ellipse cx="200" cy="292" rx="70" ry="16" fill="#8a9a60"/>
-        <path d="M140 240 q0 52 60 52 q60 0 60 -52 q0 -32 -60 -32 q-60 0 -60 32z" fill="#7d6b55"/>
-        <ellipse cx="200" cy="238" rx="52" ry="12" fill="#a9ba7a"/>
-        <rect x="330" y="200" width="18" height="92" rx="8" fill="#c9a86a"/>
-        <g stroke="#d8bc82" stroke-width="3" fill="none">
-          <path d="M339 292 q-26 -40 -30 -70"/>
-          <path d="M339 292 q0 -44 0 -74"/>
-          <path d="M339 292 q26 -40 30 -70"/>
-        </g>
-        <rect x="430" y="228" width="90" height="64" rx="8" fill="#45522f"/>
-        <circle cx="475" cy="150" r="46" fill="#a9ba7a" opacity=".55"/>
-        <circle cx="160" cy="120" r="30" fill="#8a9a60" opacity=".4"/>
-      </svg>
+<!-- ============ WORKSHOP ============ -->
+<section class="workshop">
+  <div class="wrap">
+    <div class="ws-top">
+      <h2 class="display rv">Free Matcha Workshop</h2>
+      <a href="#contact" class="pill pill-lg rv">Register</a>
     </div>
-    <div>
-      <span class="badge">Free · In Studio</span>
-      <h2>Learn the Ritual, Hands On</h2>
-      <p>Join our complimentary preparation workshops and learn to sift, whisk, and taste the way tea masters do. We cover water temperature, technique, and how to tell great matcha from the merely green.</p>
-      <p>Sessions are small, slow, and open to complete beginners. Leave with a steady hand and a better bowl.</p>
-      <a href="#contact" class="btn btn-dark">Register for a Class</a>
+    <div class="ws-imgs">
+      <div class="ws-tile ws-quote rv"><span>&ldquo;Every Shade,<br>Perfectly<br>Coordinated&rdquo;</span></div>
+      <div class="ws-spacer"></div>
+      <div class="ws-tile rv"><img src="https://images.unsplash.com/photo-1778305071308-aed481282a6c?auto=format&fit=crop&w=900&q=80" alt="Traditional tea room"></div>
     </div>
   </div>
 </section>
 
-<!-- ================= ABOUT ================= -->
+<!-- ============ LEARN ============ -->
+<section class="learn">
+  <div class="wrap">
+    <h2 class="display rv">Learn.<br>Whisk.<br>Taste.<br>Repeat.</h2>
+    <div class="learn-photo rv"><img src="https://images.unsplash.com/photo-1746932451426-209444cd613a?auto=format&fit=crop&w=700&q=80" alt="Whisking matcha by hand"></div>
+    <p class="rv">Explore the craft of traditional Japanese matcha in a small, hands-on class held right inside our shop.</p>
+    <p class="rv">This guided session walks you through ceremonial preparation, tasting technique, and the journey of the leaf — from Uji farms all the way to your cup.</p>
+    <p class="rv">New to matcha or already hooked, you'll leave with a deeper appreciation and a sharper daily ritual.</p>
+  </div>
+</section>
+
+<!-- ============ ABOUT ============ -->
 <section class="about" id="about">
   <div class="wrap">
-    <div class="kicker">Our Philosophy</div>
-    <blockquote>&ldquo;Matcha isn't just a drink to us — <em>it's a ritual.</em> We choose flavor over fashion, and craft over shortcuts, every single time.&rdquo;</blockquote>
-    <p>COORDINATEZ blends Japanese tradition with a modern city pace: rigorously sourced leaf, thoughtfully milled blends, and preparation treated as a practice — not a step to skip.</p>
-  </div>
-</section>
-
-<!-- ================= GALLERY ================= -->
-<section class="gallery">
-  <div class="wrap">
-    <div class="strip">
-      <a href="#" onclick="return false;" aria-label="Gallery image 1">
-        <svg viewBox="0 0 300 300"><rect width="300" height="300" fill="#8a9a60"/><ellipse cx="150" cy="170" rx="90" ry="26" fill="#a9ba7a"/><path d="M80 160 q70 -40 140 0" stroke="#dfe8c2" stroke-width="4" fill="none" opacity=".7"/></svg>
-      </a>
-      <a href="#" onclick="return false;" aria-label="Gallery image 2">
-        <svg viewBox="0 0 300 300"><rect width="300" height="300" fill="#efe9dc"/><path d="M85 160 q0 60 65 60 q65 0 65 -60 q0 -38 -65 -38 q-65 0 -65 38z" fill="#7d6b55"/><ellipse cx="150" cy="158" rx="54" ry="13" fill="#a9ba7a"/></svg>
-      </a>
-      <a href="#" onclick="return false;" aria-label="Gallery image 3">
-        <svg viewBox="0 0 300 300"><rect width="300" height="300" fill="#45522f"/><circle cx="150" cy="150" r="70" fill="#5c6b40"/><circle cx="150" cy="150" r="44" fill="#a9ba7a"/></svg>
-      </a>
-      <a href="#" onclick="return false;" aria-label="Gallery image 4">
-        <svg viewBox="0 0 300 300"><rect width="300" height="300" fill="#e9efdd"/><rect x="120" y="70" width="14" height="70" rx="6" fill="#c9a86a"/><g stroke="#d8bc82" stroke-width="3" fill="none"><path d="M127 140 q-30 50 -34 100"/><path d="M127 140 q0 52 0 102"/><path d="M127 140 q30 50 34 100"/></g><ellipse cx="150" cy="248" rx="80" ry="12" fill="#dfd6bd"/></svg>
-      </a>
+    <div class="about-photo rv"><img src="https://images.unsplash.com/photo-1764092184365-0c4c62b55d97?auto=format&fit=crop&w=1600&q=80" alt="Green tea fields"></div>
+    <div class="about-cols">
+      <h2 class="display rv">About Coordinatez<br>Find your match.</h2>
+      <div class="about-text">
+        <p class="rv">Coordinatez was built around one simple belief:</p>
+        <p class="rv">Matcha is not just a drink — it's a ritual.</p>
+        <p class="rv">We bring traditional Japanese craftsmanship into modern daily life. Every bowl, every latte, every tin starts with carefully sourced Kyoto matcha, blended for balance, depth, and drinkability.</p>
+        <p class="rv">We don't chase trends.<br>We focus on flavor.</p>
+      </div>
     </div>
-    <div class="tag">@coordinatez — Follow along on Instagram</div>
   </div>
 </section>
 
-<!-- ================= CTA ================= -->
-<section class="cta" id="contact">
+<!-- ============ SOCIAL ============ -->
+<section class="social">
   <div class="wrap">
-    <h2>Let's Make Something Together</h2>
-    <p>Cafés, studios, and makers who care about quality — we collaborate on blends, events, and wholesale. Tell us what you're building.</p>
-    <a href="mailto:hello@coordinatez.com" class="btn">Get in Touch</a>
+    <h2 class="display rv">Follow us on social</h2>
+    <div class="gal">
+      <a href="#" onclick="return false;" class="rv"><img src="https://images.unsplash.com/photo-1717398804885-a6c22b3e5c2f?auto=format&fit=crop&w=700&q=80" alt="Matcha drink"></a>
+      <a href="#" onclick="return false;" class="rv"><img src="https://images.unsplash.com/photo-1717398804998-ad2d48822518?auto=format&fit=crop&w=700&q=80" alt="Iced matcha latte"></a>
+      <a href="#" onclick="return false;" class="rv"><img src="https://images.unsplash.com/photo-1566373049939-704ea187ef98?auto=format&fit=crop&w=700&q=80" alt="Matcha powder and spoon"></a>
+      <a href="#" onclick="return false;" class="rv"><img src="https://images.unsplash.com/photo-1777041097323-2f2ab6734a82?auto=format&fit=crop&w=700&q=80" alt="Minimal shop interior"></a>
+    </div>
+    <div class="center rv"><a href="#" onclick="return false;" class="pill pill-lg">Social</a></div>
   </div>
 </section>
 
-<!-- ================= FOOTER ================= -->
+<!-- ============ WORK WITH ============ -->
+<section class="contact" id="contact">
+  <div class="wrap contact-cols">
+    <div class="blurb">
+      <h2 class="display rv">Work With <span class="brand">Coordinatez</span></h2>
+      <p class="rv">We love teaming up with people and brands who care about quality and creativity.</p>
+      <p class="rv">Interested in working together? Share a few details below — we'll be in touch soon.</p>
+    </div>
+    <form onsubmit="return demoSend(event)" class="rv">
+      <div class="field">
+        <label>Name <small>(required)</small></label>
+        <div class="name-row">
+          <div><input type="text" required aria-label="First Name"><p class="sublabel">First Name</p></div>
+          <div><input type="text" required aria-label="Last Name"><p class="sublabel">Last Name</p></div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Email <small>(required)</small></label>
+        <input type="email" required>
+      </div>
+      <div class="field">
+        <label>Message <small>(required)</small></label>
+        <textarea required></textarea>
+      </div>
+      <button type="submit" class="pill pill-lg">Send</button>
+    </form>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
 <footer>
-  <div class="wrap">
-    <div class="foot-grid">
-      <div class="foot-brand">
-        <div class="logo">COORDINATE<span style="color:var(--matcha)">Z</span></div>
-        <p>Quiet craft, everyday ritual. Small-batch matcha and teaware, made to slow you down.</p>
-      </div>
-      <div>
-        <h4>Visit</h4>
-        <ul>
-          <li>1234 W Example Ave</li>
-          <li>Chicago, IL 60622</li>
-          <li>Wed–Sun, 9am–5pm</li>
-        </ul>
-      </div>
-      <div>
-        <h4>Contact</h4>
-        <ul>
-          <li><a href="mailto:hello@coordinatez.com">hello@coordinatez.com</a></li>
-          <li><a href="tel:+13125550100">(312) 555-0100</a></li>
-        </ul>
-      </div>
-      <div>
-        <h4>Follow</h4>
-        <ul>
-          <li><a href="#" onclick="return false;">Instagram</a></li>
-          <li><a href="#" onclick="return false;">Newsletter</a></li>
-        </ul>
-      </div>
+  <div class="wrap foot">
+    <div class="foot-brand">
+      <div class="display rv">Coordinatez</div>
+      <div class="display rv">&mdash; Kyoto craft, modern ritual</div>
     </div>
-    <div class="foot-bottom">
-      <span>© 2026 COORDINATEZ. All rights reserved.</span>
-      <span>Static demo for client review.</span>
+    <div>
+      <h4 class="rv">Location</h4>
+      <p class="rv">1234 W Example Ave</p>
+      <p class="rv">Chicago, IL 60622</p>
+    </div>
+    <div class="foot-contact">
+      <h4 class="rv">Contact</h4>
+      <a href="mailto:hello@coordinatez.com" class="rv">hello@coordinatez.com</a>
+      <a href="tel:+13125550100" class="rv">(312) 555-0100</a>
     </div>
   </div>
 </footer>
@@ -428,27 +442,46 @@
 <div class="toast" id="toast">Added to cart</div>
 
 <script>
-  // Mobile menu
-  const burger=document.getElementById('burger');
-  const nav=document.getElementById('nav');
-  burger.addEventListener('click',()=>{
-    const open=nav.classList.toggle('open');
-    burger.classList.toggle('open',open);
-    burger.setAttribute('aria-expanded',open);
-  });
-  nav.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{
-    nav.classList.remove('open');burger.classList.remove('open');
-  }));
+  // mobile menu
+  var burger=document.getElementById('burger'),nav=document.getElementById('nav');
+  burger.addEventListener('click',function(){nav.classList.toggle('open');});
+  nav.querySelectorAll('a').forEach(function(a){a.addEventListener('click',function(){nav.classList.remove('open');});});
 
-  // Demo cart
-  let count=0,toastTimer;
+  // scroll reveal
+  var io=new IntersectionObserver(function(es){
+    es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} });
+  },{threshold:.12});
+  document.querySelectorAll('.rv').forEach(function(el,i){
+    el.style.transitionDelay=(i%4)*70+'ms';
+    io.observe(el);
+  });
+
+  // qty steppers
+  function qty(btn,d){
+    var s=btn.parentElement.querySelector('span');
+    s.textContent=Math.max(1,parseInt(s.textContent)+d);
+  }
+
+  // demo cart
+  var count=0,tt;
   function addToCart(btn){
-    count++;
+    var q=parseInt(btn.parentElement.querySelector('.qty span').textContent);
+    count+=q;
     document.getElementById('cartCount').textContent=count;
-    const toast=document.getElementById('toast');
-    toast.classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer=setTimeout(()=>toast.classList.remove('show'),1800);
+    var t=document.getElementById('toast');
+    t.classList.add('show');clearTimeout(tt);
+    tt=setTimeout(function(){t.classList.remove('show');},1800);
+  }
+
+  // demo form
+  function demoSend(e){
+    e.preventDefault();
+    var t=document.getElementById('toast');
+    t.textContent='Message sent (demo)';
+    t.classList.add('show');clearTimeout(tt);
+    tt=setTimeout(function(){t.classList.remove('show');t.textContent='Added to cart';},2000);
+    e.target.reset();
+    return false;
   }
 </script>
 </body>
